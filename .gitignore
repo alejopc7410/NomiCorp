@@ -1,0 +1,33 @@
+# .NET
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+
+# React
+**/node_modules/
+**/dist/
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Configuracion local
+**/appsettings.Development.json
+**/appsettings.Production.json
+
+# Bases de datos y copias
+*.bak
+*.bacpac
+*.mdf
+*.ldf
+
+# Scripts de despliegue que debemos revisar
+NomiCorp_InitialDeploy.sql
+
+# Credenciales y certificados
+*.pfx
+*.pem
+*.key
+secrets.json

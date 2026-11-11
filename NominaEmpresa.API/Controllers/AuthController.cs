@@ -55,6 +55,16 @@ public class AuthController : ControllerBase
                 lockoutOnFailure: true
             );
 
+        _logger.LogInformation(
+            "Resultado de autenticación: " +
+            "Succeeded={Succeeded}, " +
+            "IsLockedOut={IsLockedOut}, " +
+            "IsNotAllowed={IsNotAllowed}",
+            passwordResult.Succeeded,
+            passwordResult.IsLockedOut,
+            passwordResult.IsNotAllowed
+        );
+
         if (!passwordResult.Succeeded)
         {
             _logger.LogWarning(

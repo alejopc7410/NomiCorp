@@ -333,7 +333,7 @@ public class PayrollCalculationService
             detail.Concepts.Add(new PayrollConcept
             {
                 Code = "SAL001",
-                Description = $"Salario básico ({workedDays} días)",
+                Description = $"Salario basico ({workedDays} días)",
                 Category = "Devengado",
                 Quantity = workedDays,
                 UnitValue = Math.Round(

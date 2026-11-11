@@ -16,33 +16,38 @@ public class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly TokenService _tokenService;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
-        UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
-        TokenService tokenService)
+    UserManager<ApplicationUser> userManager,
+    SignInManager<ApplicationUser> signInManager,
+    TokenService tokenService,
+    ILogger<AuthController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _tokenService = tokenService;
+        _logger = logger;
     }
+
 
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<ActionResult<LoginResponseDto>> Login(LoginDto dto)
     {
-        // Buscar usuario por correo.
         var user = await _userManager.FindByEmailAsync(dto.Email);
 
         if (user == null || !user.IsActive)
         {
+            _logger.LogWarning(
+                "Login rechazado: usuario inexistente o inactivo.");
+
             return Unauthorized(new
             {
                 message = "Correo o contraseña incorrectos."
             });
         }
 
-        // Validar contraseña y aplicar bloqueo por intentos fallidos.
         var passwordResult = await _signInManager
             .CheckPasswordSignInAsync(
                 user,
@@ -52,16 +57,23 @@ public class AuthController : ControllerBase
 
         if (!passwordResult.Succeeded)
         {
+            _logger.LogWarning(
+                "Login rechazado. LockedOut={LockedOut}, " +
+                "NotAllowed={NotAllowed}, Failed={Failed}",
+                passwordResult.IsLockedOut,
+                passwordResult.IsNotAllowed,
+                !passwordResult.IsLockedOut &&
+                !passwordResult.IsNotAllowed
+            );
+
             return Unauthorized(new
             {
                 message = "Correo o contraseña incorrectos."
             });
         }
 
-        // Obtener los roles del usuario.
         var roles = await _userManager.GetRolesAsync(user);
 
-        // Generar JWT.
         var token = _tokenService.CreateToken(user, roles);
 
         return Ok(new LoginResponseDto
@@ -74,6 +86,7 @@ public class AuthController : ControllerBase
             EmployeeId = user.EmployeeId
         });
     }
+
 
 
     [HttpPost("change-password")]

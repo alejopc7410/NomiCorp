@@ -23,12 +23,56 @@ public class PayrollDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<BonusSettlement> BonusSettlements => Set<BonusSettlement>();
     public DbSet<BonusSettlementDetail> BonusSettlementDetails => Set<BonusSettlementDetail>();
     public DbSet<BonusPreviousPayment> BonusPreviousPayments => Set<BonusPreviousPayment>();
+    public DbSet<BonusPayrollAllocation> BonusPayrollAllocations => Set<BonusPayrollAllocation>();
+    public DbSet<PayslipIssue> PayslipIssues => Set<PayslipIssue>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Importante: configura primero las tablas de Identity.
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<PayslipIssue>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasIndex(x => x.PayrollDetailId);
+
+            entity.HasOne<PayrollDetail>()
+                .WithMany()
+                .HasForeignKey(x => x.PayrollDetailId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<BonusPayrollAllocation>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasIndex(x => x.BonusSettlementDetailId)
+                .IsUnique();
+
+            entity.HasIndex(x => new
+            {
+                x.PayrollPeriodId,
+                x.EmployeeId
+            }).IsUnique();
+
+            entity.Property(x => x.Amount)
+                .HasPrecision(18, 2);
+
+            entity.Property(x => x.Status)
+                .HasMaxLength(30)
+                .IsRequired();
+
+            entity.HasOne<BonusSettlementDetail>()
+                .WithMany()
+                .HasForeignKey(x => x.BonusSettlementDetailId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<PayrollPeriod>()
+                .WithMany()
+                .HasForeignKey(x => x.PayrollPeriodId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
 
         modelBuilder.Entity<BonusPreviousPayment>(entity =>
         {

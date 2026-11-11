@@ -2,6 +2,7 @@ import EmployeePayslips from "./EmployeePayslips";
 import { useEffect, useState } from 'react';
 import { getMyInformation } from './services/employeePortal';
 import { useAuth } from './context/AuthContext';
+import logo from './media/logo.png';
 
 export default function EmployeePortal() {
     const [employee, setEmployee] = useState(null);
@@ -51,7 +52,7 @@ export default function EmployeePortal() {
                     <div className="container flex-wrap gap-3 py-2">
                         <span className="navbar-brand fw-bold">
                             <img
-                                src="/src/media/logo.png"
+                                src={logo}
                                 alt="NomiCorp"
                                 width="100"
                                 height="100"

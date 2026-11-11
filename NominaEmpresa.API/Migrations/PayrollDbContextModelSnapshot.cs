@@ -236,6 +236,49 @@ namespace NominaEmpresa.API.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("NominaEmpresa.API.Models.BonusPayrollAllocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BonusSettlementDetailId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("IncludedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PayrollPeriodId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BonusSettlementDetailId")
+                        .IsUnique();
+
+                    b.HasIndex("PayrollPeriodId", "EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("BonusPayrollAllocations");
+                });
+
             modelBuilder.Entity("NominaEmpresa.API.Models.BonusPreviousPayment", b =>
                 {
                     b.Property<int>("Id")
@@ -687,6 +730,33 @@ namespace NominaEmpresa.API.Migrations
                     b.ToTable("PayrollPeriods");
                 });
 
+            modelBuilder.Entity("NominaEmpresa.API.Models.PayslipIssue", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IncludesBonus")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("IssuedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IssuedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PayrollDetailId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PayrollDetailId");
+
+                    b.ToTable("PayslipIssues");
+                });
+
             modelBuilder.Entity("NominaEmpresa.API.Models.SalaryHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -784,6 +854,21 @@ namespace NominaEmpresa.API.Migrations
                     b.Navigation("Employee");
                 });
 
+            modelBuilder.Entity("NominaEmpresa.API.Models.BonusPayrollAllocation", b =>
+                {
+                    b.HasOne("NominaEmpresa.API.Models.BonusSettlementDetail", null)
+                        .WithMany()
+                        .HasForeignKey("BonusSettlementDetailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("NominaEmpresa.API.Models.PayrollPeriod", null)
+                        .WithMany()
+                        .HasForeignKey("PayrollPeriodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("NominaEmpresa.API.Models.BonusPreviousPayment", b =>
                 {
                     b.HasOne("NominaEmpresa.API.Models.BonusSettlement", null)
@@ -862,6 +947,15 @@ namespace NominaEmpresa.API.Migrations
                         .IsRequired();
 
                     b.Navigation("Contract");
+                });
+
+            modelBuilder.Entity("NominaEmpresa.API.Models.PayslipIssue", b =>
+                {
+                    b.HasOne("NominaEmpresa.API.Models.PayrollDetail", null)
+                        .WithMany()
+                        .HasForeignKey("PayrollDetailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("NominaEmpresa.API.Models.SalaryHistory", b =>

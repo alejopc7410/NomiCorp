@@ -16,7 +16,7 @@ public class PayrollCalculationService
     private const decimal EmployeeHealthRate = 0.04m;
     private const decimal EmployeePensionRate = 0.04m;
 
-    // Tope general del IBC: 25 salarios mÌnimos.
+    // Tope general del IBC: 25 salarios m√≠nimos.
     private const decimal MaximumIbc2026 =
         MinimumSalary2026 * 25m;
 
@@ -65,7 +65,7 @@ public class PayrollCalculationService
         if (workedDays < 1 || workedDays > 30)
         {
             throw new InvalidOperationException(
-                "Los dÌas cotizados deben estar entre 1 y 30.");
+                "Los d√≠as cotizados deben estar entre 1 y 30.");
         }
 
         if (salaryBase < 0)
@@ -74,7 +74,7 @@ public class PayrollCalculationService
                 "La base salarial no puede ser negativa.");
         }
 
-        // MÌnimo proporcional para un trabajador
+        // M√≠nimo proporcional para un trabajador
         // dependiente ordinario con ingreso o retiro
         // durante el mes.
         decimal minimumIbc =
@@ -100,23 +100,30 @@ public class PayrollCalculationService
             .FirstOrDefaultAsync(p => p.Id == payrollPeriodId);
 
         if (period == null)
-            throw new InvalidOperationException("El periodo de nÛmina no existe.");
+            throw new InvalidOperationException("El periodo de n√≥mina no existe.");
 
         if (period.Status != "Abierto")
             throw new InvalidOperationException(
-                "Solo se pueden calcular periodos que estÈn Abiertos.");
+                "Solo se pueden calcular periodos que est√©n Abiertos.");
+
+        var scheduledBonuses =
+            await _context.BonusPayrollAllocations
+                .Where(b =>
+                    b.PayrollPeriodId == period.Id &&
+                    b.Status == "Programada")
+                .ToListAsync();
 
         if (period.Month < 1 || period.Month > 12)
-            throw new InvalidOperationException("El mes del periodo no es v·lido.");
+            throw new InvalidOperationException("El mes del periodo no es v√°lido.");
 
         if (period.StartDate > period.EndDate)
-            throw new InvalidOperationException("Las fechas del periodo no son v·lidas.");
+            throw new InvalidOperationException("Las fechas del periodo no son v√°lidas.");
 
         if (period.Year != 2026)
         {
             throw new InvalidOperationException(
-                "Los par·metros de auxilio de transporte " +
-                "todavÌa est·n configurados ˙nicamente para 2026.");
+                "Los par√°metros de auxilio de transporte " +
+                "todav√≠a est√°n configurados √∫nicamente para 2026.");
         }
 
         await using var transaction =
@@ -128,9 +135,9 @@ public class PayrollCalculationService
         if (existingDetails)
         {
             throw new InvalidOperationException(
-                "Este periodo ya tiene detalles de nÛmina. " +
+                "Este periodo ya tiene detalles de n√≥mina. " +
                 "No se puede calcular nuevamente sin revisar " +
-                "la liquidaciÛn existente.");
+                "la liquidaci√≥n existente.");
         }
 
         var contracts = await _context.Contracts
@@ -141,8 +148,8 @@ public class PayrollCalculationService
                 (c.EndDate == null || c.EndDate >= period.StartDate))
             .ToListAsync();
 
-        // Un empleado no puede tener dos contratos simult·neos
-        // dentro de esta primera versiÛn del motor.
+        // Un empleado no puede tener dos contratos simult√°neos
+        // dentro de esta primera versi√≥n del motor.
         var duplicateEmployees = contracts
             .GroupBy(c => c.EmployeeId)
             .Where(g => g.Count() > 1)
@@ -160,7 +167,7 @@ public class PayrollCalculationService
         {
             throw new InvalidOperationException(
                 "No existen contratos vigentes durante este " +
-                "periodo de nÛmina.");
+                "periodo de n√≥mina.");
         }
 
         var novelties = await _context.PayrollNovelties
@@ -231,7 +238,7 @@ public class PayrollCalculationService
                 if (salary.MonthlySalary <= 0)
                 {
                     throw new InvalidOperationException(
-                        $"El contrato {contract.Id} tiene un salario inv·lido.");
+                        $"El contrato {contract.Id} tiene un salario inv√°lido.");
                 }
 
                 for (int day = startDay; day <= endDay; day++)
@@ -241,7 +248,7 @@ public class PayrollCalculationService
                         throw new InvalidOperationException(
                             $"El contrato {contract.Id} tiene " +
                             $"historiales salariales superpuestos " +
-                            $"en el dÌa laboral {day}.");
+                            $"en el d√≠a laboral {day}.");
                     }
 
                     coveredPayrollDays[day] = true;
@@ -260,7 +267,7 @@ public class PayrollCalculationService
             {
                 throw new InvalidOperationException(
                     $"El historial salarial del contrato {contract.Id} " +
-                    "no cubre todos los dÌas trabajados o tiene periodos superpuestos.");
+                    "no cubre todos los d√≠as trabajados o tiene periodos superpuestos.");
             }
 
             basicSalary = Math.Round(
@@ -269,6 +276,12 @@ public class PayrollCalculationService
             var employeeNovelties = novelties
                 .Where(n => n.ContractId == contract.Id)
                 .ToList();
+
+
+            var employeeBonus = scheduledBonuses
+                .SingleOrDefault(b =>
+                    b.EmployeeId == contract.EmployeeId);
+
 
             var detail = new PayrollDetail
             {
@@ -298,10 +311,29 @@ public class PayrollCalculationService
                 NetPay = 0
             };
 
+            if (employeeBonus != null)
+            {
+                if (employeeBonus.Amount <= 0)
+                {
+                    throw new InvalidOperationException(
+                        "La prima programada tiene un valor inv√°lido.");
+                }
+
+                detail.Concepts.Add(new PayrollConcept
+                {
+                    Code = "PRI-SERV",
+                    Description = "Prima de servicios",
+                    Category = "Devengado",
+                    Quantity = 1,
+                    UnitValue = employeeBonus.Amount,
+                    Amount = employeeBonus.Amount
+                });
+            }
+
             detail.Concepts.Add(new PayrollConcept
             {
                 Code = "SAL001",
-                Description = $"Salario b·sico ({workedDays} dÌas)",
+                Description = $"Salario b√°sico ({workedDays} d√≠as)",
                 Category = "Devengado",
                 Quantity = workedDays,
                 UnitValue = Math.Round(
@@ -338,7 +370,7 @@ public class PayrollCalculationService
                 {
                     throw new InvalidOperationException(
                         $"La novedad {novelty.Id} tiene una fecha " +
-                        "fuera del periodo de nÛmina.");
+                        "fuera del periodo de n√≥mina.");
                 }
 
                 if (novelty.NoveltyDate < contract.StartDate ||
@@ -346,7 +378,7 @@ public class PayrollCalculationService
                      novelty.NoveltyDate > contract.EndDate.Value))
                 {
                     throw new InvalidOperationException(
-                        $"La novedad {novelty.Id} est· fuera de " +
+                        $"La novedad {novelty.Id} est√° fuera de " +
                         $"la vigencia del contrato {contract.Id}.");
                 }
 
@@ -361,7 +393,7 @@ public class PayrollCalculationService
                     novelty.Category != "Informativa")
                 {
                     throw new InvalidOperationException(
-                        $"La novedad {novelty.Id} tiene una categorÌa no v·lida.");
+                        $"La novedad {novelty.Id} tiene una categor√≠a no v√°lida.");
                 }
 
                 detail.Concepts.Add(new PayrollConcept
@@ -378,9 +410,9 @@ public class PayrollCalculationService
             }
 
             // Base preliminar de prestaciones:
-            // salario b·sico + auxilio de transporte.
+            // salario b√°sico + auxilio de transporte.
             //
-            // Se ampliar· para incluir novedades constitutivas
+            // Se ampliar√° para incluir novedades constitutivas
             // de salario, como comisiones y recargos.
 
             decimal benefitsBase = basicSalary + transportAllowance;
@@ -393,11 +425,11 @@ public class PayrollCalculationService
 
 
 
-            // CesantÌas causadas durante el periodo.
+            // Cesant√≠as causadas durante el periodo.
             detail.Concepts.Add(new PayrollConcept
             {
                 Code = "CES-PROV",
-                Description = "ProvisiÛn estimada de cesantÌas",
+                Description = "Provisi√≥n estimada de cesant√≠as",
                 Category = "Informativa",
                 Quantity = workedDays,
                 UnitValue = null,
@@ -408,7 +440,7 @@ public class PayrollCalculationService
             detail.Concepts.Add(new PayrollConcept
             {
                 Code = "PRI-PROV",
-                Description = "ProvisiÛn estimada de prima de servicios",
+                Description = "Provisi√≥n estimada de prima de servicios",
                 Category = "Informativa",
                 Quantity = workedDays,
                 UnitValue = null,
@@ -420,15 +452,15 @@ public class PayrollCalculationService
             // SEGURIDAD SOCIAL DEL EMPLEADO - 2026
             //
 
-            // En esta versiÛn asumimos que las novedades
-            // de categorÌa Devengado son salariales.
+            // En esta versi√≥n asumimos que las novedades
+            // de categor√≠a Devengado son salariales.
             // El auxilio de transporte no se incluye.
 
             decimal salaryBasedNovelties = employeeNovelties
                 .Where(n => n.Category == "Devengado")
                 .Sum(n => n.Amount);
 
-            // Salario b·sico + novedades salariales.
+            // Salario b√°sico + novedades salariales.
             // Nunca agregamos transportAllowance al IBC.
             decimal salaryBaseForIbc =
                 basicSalary + salaryBasedNovelties;
@@ -444,9 +476,9 @@ public class PayrollCalculationService
             {
                 throw new InvalidOperationException(
                     $"El empleado {detail.EmployeeName} " +
-                    "requiere c·lculo del Fondo de " +
+                    "requiere c√°lculo del Fondo de " +
                     "Solidaridad Pensional. " +
-                    "Este caso todavÌa no est· implementado.");
+                    "Este caso todav√≠a no est√° implementado.");
             }
 
             // Aportes a cargo del trabajador.
@@ -469,11 +501,11 @@ public class PayrollCalculationService
                 Amount = employeeHealth
             });
 
-            // Concepto de pensiÛn.
+            // Concepto de pensi√≥n.
             detail.Concepts.Add(new PayrollConcept
             {
                 Code = "SS-PENSION",
-                Description = "Aporte a pensiÛn - empleado (4%)",
+                Description = "Aporte a pensi√≥n - empleado (4%)",
                 Category = "Deduccion",
                 Quantity = 1,
                 UnitValue = employeePension,
@@ -495,13 +527,35 @@ public class PayrollCalculationService
                 throw new InvalidOperationException(
                     $"Las deducciones del empleado " +
                     $"{detail.EmployeeName} superan sus devengados. " +
-                    "Revise las novedades antes de calcular la nÛmina.");
+                    "Revise las novedades antes de calcular la n√≥mina.");
             }
 
             _context.PayrollDetails.Add(detail);
         }
 
+        var calculatedEmployeeIds = _context.ChangeTracker
+            .Entries<PayrollDetail>()
+            .Where(e =>
+                e.State == EntityState.Added &&
+                e.Entity.PayrollPeriodId == period.Id)
+            .Select(e => e.Entity.EmployeeId)
+            .ToHashSet();
+
+        if (scheduledBonuses.Any(b =>
+            !calculatedEmployeeIds.Contains(b.EmployeeId)))
+        {
+            throw new InvalidOperationException(
+                "Una prima programada no pudo incorporarse " +
+                "al detalle de n√≥mina correspondiente.");
+        }
+
         period.Status = "Calculado";
+
+        foreach (var bonus in scheduledBonuses)
+        {
+            bonus.Status = "Incorporada";
+            bonus.IncludedAtUtc = DateTime.UtcNow;
+        }
 
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();

@@ -120,6 +120,7 @@ builder.Services.AddScoped<BonusSettlementService>();
 builder.Services.AddScoped<BonusValidationService>();
 builder.Services.AddScoped<BonusPaymentReconciliationService>();
 builder.Services.AddScoped<BonusLaborIncidentService>();
+builder.Services.AddScoped<BonusPayrollIntegrationService>();
 
 // 7. CORS
 var allowedOrigins = builder.Configuration

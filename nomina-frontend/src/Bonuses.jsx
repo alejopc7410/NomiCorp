@@ -43,6 +43,9 @@ export default function Bonuses() {
     const [validation, setValidation] = useState(null);
     const [validating, setValidating] = useState(false);
 
+    const [decemberProjection, setDecemberProjection] = useState(null);
+    const [projecting, setProjecting] = useState(false);
+
     async function loadSettlements() {
         const data = await bonusSettlementsApi.getAll();
         setSettlements(data);
@@ -53,6 +56,29 @@ export default function Bonuses() {
             setError(err.message);
         });
     }, []);
+
+
+    async function projectDecember() {
+        setProjecting(true);
+        setError("");
+        setMessage("");
+        setDecemberProjection(null);
+
+        try {
+            const data =
+                await bonusesApi.decemberProjection(year);
+
+            setDecemberProjection(data);
+        } catch (err) {
+            setError(
+                err.message ||
+                "No fue posible proyectar la prima de diciembre."
+            );
+        } finally {
+            setProjecting(false);
+        }
+    }
+
 
 
     async function updateCutoff() {
@@ -297,9 +323,10 @@ export default function Bonuses() {
                                 type="number"
                                 className="form-control"
                                 value={year}
-                                onChange={(e) =>
-                                    setYear(Number(e.target.value))
-                                }
+                                onChange={(e) => {
+                                    setYear(Number(e.target.value));
+                                    setDecemberProjection(null);
+                                }}
                             />
                         </div>
 
@@ -354,6 +381,18 @@ export default function Bonuses() {
                                 {loading
                                     ? "Calculando..."
                                     : "Calcular prima"}
+                            </button>
+                        </div>
+                        <div className="col-md-3">
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary"
+                                disabled={projecting || loading}
+                                onClick={projectDecember}
+                            >
+                                {projecting
+                                    ? "Proyectando..."
+                                    : "Proyectar prima de diciembre"}
                             </button>
                         </div>
                     </div>
@@ -450,6 +489,85 @@ export default function Bonuses() {
                     </div>
                 </div>
             )}
+
+
+            {decemberProjection && (
+                <div className="card mb-4">
+                    <div className="card-header">
+                        <strong>
+                            Proyección de prima de diciembre
+                        </strong>
+                    </div>
+
+                    <div className="card-body">
+                        <div className="alert alert-warning">
+                            {decemberProjection.message}
+                        </div>
+
+                        <p>
+                            <strong>Período proyectado:</strong>{" "}
+                            {decemberProjection.startDate}
+                            {" al "}
+                            {decemberProjection.endDate}
+                        </p>
+
+                        <p>
+                            <strong>Empleados / contratos:</strong>{" "}
+                            {decemberProjection.employeeCount}
+                        </p>
+
+                        <h4 className="mb-4">
+                            Total proyectado:{" "}
+                            {formatCOP(decemberProjection.totalBonus)}
+                        </h4>
+
+                        <div className="table-responsive">
+                            <table className="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>Días</th>
+                                        <th>Salarios</th>
+                                        <th>Auxilio</th>
+                                        <th>Novedades salariales</th>
+                                        <th>Prima proyectada</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {decemberProjection.details.map(d => (
+                                        <tr key={d.contractId}>
+                                            <td>{d.employeeName}</td>
+                                            <td>{d.workedDays}</td>
+                                            <td>
+                                                {formatCOP(d.salaryAccrued)}
+                                            </td>
+                                            <td>
+                                                {formatCOP(d.transportAccrued)}
+                                            </td>
+                                            <td>
+                                                {formatCOP(d.salaryNovelties)}
+                                            </td>
+                                            <td>
+                                                <strong>
+                                                    {formatCOP(d.estimatedBonus)}
+                                                </strong>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <p className="text-muted mb-0">
+                            Esta proyección es informativa.
+                            No crea ni modifica borradores,
+                            aprobaciones o pagos.
+                        </p>
+                    </div>
+                </div>
+            )}
+
 
             {/* HISTORIAL */}
             <div className="card mb-4">
@@ -759,6 +877,46 @@ export default function Bonuses() {
                                                 </ul>
                                             </div>
                                         )}
+
+
+                                        {validation.laborIncidents?.length > 0 && (
+                                            <div className="card mt-3">
+                                                <div className="card-header">
+                                                    <strong>
+                                                        Novedades laborales por revisar
+                                                    </strong>
+                                                </div>
+
+                                                <div className="table-responsive">
+                                                    <table className="table table-striped mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Empleado</th>
+                                                                <th>Fecha</th>
+                                                                <th>Tipo</th>
+                                                                <th>Tratamiento</th>
+                                                                <th>Observación</th>
+                                                            </tr>
+                                                        </thead>
+
+                                                        <tbody>
+                                                            {validation.laborIncidents.map(item => (
+                                                                <tr key={item.noveltyId}>
+                                                                    <td>{item.employeeName}</td>
+                                                                    <td>{item.noveltyDate}</td>
+                                                                    <td>{item.noveltyType}</td>
+                                                                    <td>
+                                                                        {item.treatment}
+                                                                    </td>
+                                                                    <td>{item.message}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+
                                     </div>
                                 )}
                             </div>

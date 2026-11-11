@@ -34,7 +34,8 @@ public class BonusCalculationService
             amount, 2, MidpointRounding.AwayFromZero);
     }
 
-    public async Task<BonusPreviewDto> PreviewAsync(int year, int semester, DateOnly? cutoffDate = null)
+    public async Task<BonusPreviewDto> PreviewAsync(int year, int semester, 
+        DateOnly? cutoffDate = null, bool allowFutureProjection = false)
     {
         if (year != 2026)
             throw new InvalidOperationException(
@@ -67,7 +68,7 @@ public class BonusCalculationService
                 "del semestre seleccionado.");
         }
 
-        if (cutoff > today)
+        if (cutoff > today && !allowFutureProjection)
         {
             throw new InvalidOperationException(
                 "No se pueden incluir días futuros " +
@@ -125,14 +126,14 @@ public class BonusCalculationService
             // Los conceptos informativos pueden representar
             // ausencias, incapacidades u otras situaciones
             // que requieren reglas específicas.
-            if (employeeNovelties.Any(n =>
+            /*if (employeeNovelties.Any(n =>
                 n.Category == "Informativa"))
             {
                 throw new InvalidOperationException(
                     $"El contrato {contract.Id} tiene novedades " +
                     "informativas que deben revisarse antes " +
                     "de calcular la prima.");
-            }
+            }*/
 
             var earningsNovelties = employeeNovelties
                 .Where(n => n.Category == "Devengado")
@@ -320,10 +321,17 @@ public class BonusCalculationService
             Semester = semester,
             StartDate = start,
             EndDate = cutoff,
-            Status = "Proyeccion",
-            Message =
-                "Prima causada estimada hasta la fecha de corte. " +
-                "No constituye una liquidación aprobada ni un pago.",
+            Status = cutoff > today
+                ? "ProyeccionFutura"
+                : "Proyeccion",
+
+            Message = cutoff > today
+                ? "Proyección informativa. Incluye salarios y " +
+                  "novedades registradas hasta la fecha proyectada. " +
+                  "Los importes futuros pueden cambiar y no " +
+                  "representan un pago aprobado."
+                : "Prima causada estimada hasta la fecha de corte. " +
+                  "No constituye una liquidación aprobada ni un pago.",
             EmployeeCount = results.Count,
             TotalBonus = RoundMoney(totalBonus),
             Details = results

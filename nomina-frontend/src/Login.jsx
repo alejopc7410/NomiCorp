@@ -1,4 +1,4 @@
-
+import logo from './media/logo.png';
 import { useState } from 'react';
 import { useAuth } from './context/AuthContext';
 
@@ -27,7 +27,7 @@ export default function Login() {
 
                 <div className="text-center">
                     <img
-                        src="/src/media/logo.png"
+                        src={logo}
                         alt="NomiCorp"
                         width="200"
                         height="200"

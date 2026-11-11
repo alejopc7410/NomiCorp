@@ -32,7 +32,31 @@ export const bonusesApi = {
         }
 
         return result;
+    },
+
+    
+    async decemberProjection(year) {
+        const response = await fetch(
+            `${API_URL}/api/bonuses/december-projection?year=${year}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`
+                }
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.message ||
+                "No se pudo generar la proyección de diciembre."
+            );
+        }
+
+        return result;
     }
+
 
 };
 

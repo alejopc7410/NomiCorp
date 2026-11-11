@@ -11,14 +11,18 @@ public class BonusValidationService
 {
     private readonly PayrollDbContext _context;
     private readonly BonusCalculationService _calculator;
+    private readonly BonusLaborIncidentService _laborService;
 
     public BonusValidationService(
         PayrollDbContext context,
-        BonusCalculationService calculator)
+        BonusCalculationService calculator,
+        BonusLaborIncidentService laborService)
     {
         _context = context;
         _calculator = calculator;
+        _laborService = laborService;
     }
+
 
     private static DateOnly ColombiaToday()
     {
@@ -231,18 +235,33 @@ public class BonusValidationService
 
         // Las informativas todavía requieren
         // tratamiento especializado.
-        var informative = novelties
-            .Where(n =>
-                n.Category == "Informativa")
-            .ToList();
 
-        if (informative.Any())
+        var laborIncidents =
+            await _laborService.GetIncidentsAsync(
+                settlement.StartDate,
+                settlement.EndDate,
+                contractIds
+            );
+
+        result.LaborIncidents = laborIncidents;
+
+        if (laborIncidents.Any(x => x.RequiresReview))
+        {
+            result.Errors.Add(
+                $"Existen {laborIncidents.Count} novedades " +
+                "laborales que requieren revisión. " +
+                "No se han descontado días automáticamente."
+            );
+        }
+
+
+        /*if (informative.Any())
         {
             result.Errors.Add(
                 $"Existen {informative.Count} novedades " +
                 "informativas que requieren revisión " +
                 "de ausencias, licencias o incapacidades.");
-        }
+        }*/
 
         // 8. Comparar con el cálculo actual.
         // Solo si las validaciones previas permiten

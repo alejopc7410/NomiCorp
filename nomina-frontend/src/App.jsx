@@ -1,4 +1,4 @@
-
+import logo from './media/logo.png';
 import { useState } from 'react';
 import EmployeePortal from './EmployeePortal';
 import Employees from './Employees';
@@ -85,7 +85,7 @@ function Application() {
                 <div className="container flex-wrap gap-3 py-2">
                     <span className="navbar-brand fw-bold">
                         <img
-                            src="/src/media/logo.png"
+                            src={logo}
                             alt="NomiCorp"
                             width="100"
                             height="100"

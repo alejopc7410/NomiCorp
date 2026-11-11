@@ -47,4 +47,40 @@ public class BonusesController : ControllerBase
             });
         }
     }
+
+    [HttpGet("december-projection")]
+    public async Task<IActionResult> DecemberProjection(
+    [FromQuery] int year)
+    {
+        if (year < 2020 || year > 2100)
+        {
+            return BadRequest(new
+            {
+                message = "El año no es válido."
+            });
+        }
+
+        try
+        {
+            var decemberEnd = new DateOnly(
+                year, 12, 31
+            );
+
+            var result = await _service.PreviewAsync(
+                year: year,
+                semester: 2,
+                cutoffDate: decemberEnd,
+                allowFutureProjection: true
+            );
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
+    }
 }

@@ -57,23 +57,66 @@ public static class IdentitySeeder
         // 3. Comprobar si el usuario ya existe.
         var admin = await userManager.FindByEmailAsync(email);
 
+
         if (admin != null)
         {
-            // Nunca convertir automáticamente una cuenta existente
-            // en administrador.
+            // Verificar que sea un administrador existente.
             if (!await userManager.IsInRoleAsync(
                     admin, "Administrador"))
             {
                 throw new InvalidOperationException(
-                    "El correo del administrador inicial pertenece " +
-                    "a una cuenta existente sin el rol Administrador.");
+                    "La cuenta existente no tiene rol Administrador.");
             }
 
-            logger.LogInformation(
-                "El administrador inicial ya existe.");
+            // Restablecimiento temporal, desactivado por defecto.
+            var resetPassword = configuration.GetValue<bool>(
+                "Maintenance:ResetInitialAdminPassword");
+
+            if (resetPassword)
+            {
+                var newPassword =
+                    configuration["InitialAdmin:Password"];
+
+                if (string.IsNullOrWhiteSpace(newPassword))
+                {
+                    throw new InvalidOperationException(
+                        "Falta InitialAdmin:Password.");
+                }
+
+                var token = await userManager
+                    .GeneratePasswordResetTokenAsync(admin);
+
+                var result = await userManager.ResetPasswordAsync(
+                    admin,
+                    token,
+                    newPassword);
+
+                if (!result.Succeeded)
+                {
+                    throw new InvalidOperationException(
+                        "Error al restablecer la contraseña: " +
+                        string.Join(", ",
+                            result.Errors.Select(e => e.Description)));
+                }
+
+                admin.MustChangePassword = true;
+
+                var updateResult =
+                    await userManager.UpdateAsync(admin);
+
+                if (!updateResult.Succeeded)
+                {
+                    throw new InvalidOperationException(
+                        "No se pudo actualizar MustChangePassword.");
+                }
+
+                logger.LogInformation(
+                    "Contraseña del administrador restablecida.");
+            }
 
             return;
         }
+
 
         // 4. Solo pedir contraseña si hay que crear la cuenta.
         var password = configuration["InitialAdmin:Password"];

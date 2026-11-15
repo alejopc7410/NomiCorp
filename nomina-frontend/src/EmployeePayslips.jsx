@@ -410,7 +410,7 @@ function EmployeePayslips() {
 
                     <h4 className="mb-3">
                         Mis desprendibles
-                    </h4>
+                    </h4>   
 
                     <p className="text-muted">
                         Consulta los comprobantes de pago

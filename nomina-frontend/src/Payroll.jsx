@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { payrollApi } from "./services/payroll";
-import { generatePayslipPdf } from "./services/generatePayslipPdf";
+import {useEffect, useState} from "react";
+import {payrollApi} from "./services/payroll";
+import {generatePayslipPdf} from "./services/generatePayslipPdf";
+import {getAccessToken} from "./services/auth";
 
 const months = [
     "Enero", "Febrero", "Marzo", "Abril",
@@ -53,6 +54,31 @@ export default function Payroll() {
     useEffect(() => {
         loadPeriods();
     }, []);
+
+    async function registerPayslipIssue(payrollDetailId) {
+        const API_URL =
+            import.meta.env.VITE_API_URL;
+
+        const response = await fetch(
+            `${API_URL}/api/payslip-issues/${payrollDetailId}`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization:
+                        `Bearer ${getAccessToken()}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "El PDF se generó, pero no se pudo " +
+                "registrar su emisión."
+            );
+        }
+
+        return response.json();
+    }
 
     async function loadPeriods() {
         setLoading(true);
@@ -479,7 +505,16 @@ export default function Payroll() {
                                                     className="btn btn-outline-danger btn-sm"
                                                     onClick={async () => {
                                                         try {
-                                                            await generatePayslipPdf(details.period, employee);
+                                                            await generatePayslipPdf(
+                                                                details.period,
+                                                                employee
+                                                            );
+
+                                                            await registerPayslipIssue(employee.id);
+
+                                                            alert(
+                                                                "Comprobante generado y emisión registrada."
+                                                            );
                                                         } catch (error) {
                                                             alert(error.message);
                                                         }

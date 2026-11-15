@@ -412,6 +412,8 @@ function EmployeePayslips() {
                         Mis desprendibles
                     </h4>
 
+                    <p>Salario básico (30 días) - Provisión</p>
+
                     <p className="text-muted">
                         Consulta los comprobantes de pago
                         de tus períodos de nómina.

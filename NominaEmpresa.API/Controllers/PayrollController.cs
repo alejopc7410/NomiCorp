@@ -1,4 +1,4 @@
-
+ï»¿
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +11,7 @@ using System;
 using System.Threading.Tasks;
 
 namespace NominaEmpresa.API.Controllers;
+
 
 [ApiController]
 [Route("api/payroll")]
@@ -40,7 +41,7 @@ public class PayrollController : ControllerBase
         {
             return NotFound(new
             {
-                Message = "El período de nómina no existe."
+                Message = "El perÃ­odo de nÃ³mina no existe."
             });
         }
 
@@ -104,16 +105,16 @@ public class PayrollController : ControllerBase
         {
             return NotFound(new
             {
-                Message = "El período de nómina no existe."
+                Message = "El perÃ­odo de nÃ³mina no existe."
             });
         }
 
-        // Solo se pueden cerrar períodos calculados.
+        // Solo se pueden cerrar perÃ­odos calculados.
         if (period.Status != "Calculado")
         {
             return BadRequest(new
             {
-                Message = "Solo se pueden cerrar períodos que hayan sido calculados."
+                Message = "Solo se pueden cerrar perÃ­odos que hayan sido calculados."
             });
         }
 
@@ -122,12 +123,12 @@ public class PayrollController : ControllerBase
             .Where(d => d.PayrollPeriodId == id)
             .ToListAsync();
 
-        // No permitir cerrar una nómina vacía.
+        // No permitir cerrar una nÃ³mina vacÃ­a.
         if (details.Count == 0)
         {
             return BadRequest(new
             {
-                Message = "No se puede cerrar una nómina sin empleados procesados."
+                Message = "No se puede cerrar una nÃ³mina sin empleados procesados."
             });
         }
 
@@ -140,7 +141,7 @@ public class PayrollController : ControllerBase
         {
             return BadRequest(new
             {
-                Message = "Existen inconsistencias en los valores de la nómina."
+                Message = "Existen inconsistencias en los valores de la nÃ³mina."
             });
         }
 
@@ -151,7 +152,7 @@ public class PayrollController : ControllerBase
 
         return Ok(new
         {
-            Message = "La nómina fue cerrada correctamente.",
+            Message = "La nÃ³mina fue cerrada correctamente.",
             PeriodId = period.Id,
             Status = period.Status,
             ClosedAtUtc = period.ClosedAtUtc,
@@ -200,7 +201,7 @@ public class PayrollController : ControllerBase
         if (exists)
         {
             return Conflict(
-                "Ya existe un periodo de nómina para ese año y mes.");
+                "Ya existe un periodo de nÃ³mina para ese aÃ±o y mes.");
         }
 
         var startDate = new DateOnly(dto.Year, dto.Month, 1);
@@ -237,7 +238,7 @@ public class PayrollController : ControllerBase
             });
     }
 
-    // Ejecutar liquidación
+    // Ejecutar liquidaciÃ³n
     [HttpPost("periods/{id:int}/calculate")]
     public async Task<IActionResult> CalculatePeriod(int id)
     {
@@ -248,7 +249,7 @@ public class PayrollController : ControllerBase
 
             return Ok(new
             {
-                Message = "La nómina fue calculada correctamente.",
+                Message = "La nÃ³mina fue calculada correctamente.",
                 PeriodId = id,
                 ProcessedContracts = processedCount,
                 Status = "Calculado"

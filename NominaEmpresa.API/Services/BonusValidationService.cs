@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+Ôªøusing Microsoft.EntityFrameworkCore;
 using NominaEmpresa.API.Data;
 using NominaEmpresa.API.DTOs;
 using System;
@@ -56,7 +56,7 @@ public class BonusValidationService
         if (settlement == null)
         {
             throw new KeyNotFoundException(
-                "La liquidaciÛn de prima no existe.");
+                "La liquidaci√≥n de prima no existe.");
         }
 
         var today = ColombiaToday();
@@ -75,7 +75,7 @@ public class BonusValidationService
         if (settlement.Status != "Borrador")
         {
             result.Errors.Add(
-                "La liquidaciÛn no est· en estado Borrador.");
+                "La liquidaci√≥n no est√° en estado Borrador.");
         }
 
         // 2. Verificar las fechas del semestre.
@@ -92,7 +92,7 @@ public class BonusValidationService
             settlement.Semester != 2)
         {
             result.Errors.Add(
-                "El semestre no es v·lido.");
+                "El semestre no es v√°lido.");
         }
 
         if (settlement.StartDate != expectedStart ||
@@ -107,15 +107,15 @@ public class BonusValidationService
         if (settlement.EndDate > today)
         {
             result.Errors.Add(
-                "La fecha de corte incluye dÌas futuros.");
+                "La fecha de corte incluye d√≠as futuros.");
         }
 
         if (settlement.EndDate < expectedEnd)
         {
             result.Warnings.Add(
-                "Esta liquidaciÛn tiene una fecha de " +
+                "Esta liquidaci√≥n tiene una fecha de " +
                 "corte anterior al cierre del semestre. " +
-                "El valor representa una causaciÛn " +
+                "El valor representa una causaci√≥n " +
                 "parcial y no el semestre completo.");
         }
 
@@ -123,7 +123,7 @@ public class BonusValidationService
         if (!settlement.Details.Any())
         {
             result.Errors.Add(
-                "La liquidaciÛn no tiene empleados.");
+                "La liquidaci√≥n no tiene empleados.");
         }
 
         // 4. Empleados duplicados.
@@ -146,7 +146,7 @@ public class BonusValidationService
                 detail.WorkedDays > 180)
             {
                 result.Errors.Add(
-                    $"DÌas inv·lidos: {detail.EmployeeName}.");
+                    $"D√≠as inv√°lidos: {detail.EmployeeName}.");
             }
 
             if (detail.BonusAmount < 0 ||
@@ -167,7 +167,7 @@ public class BonusValidationService
                 2,
                 MidpointRounding.AwayFromZero);
 
-            // La comparaciÛn permite una pequeÒa
+            // La comparaci√≥n permite una peque√±a
             // diferencia por redondeo de componentes.
             if (DifferentMoney(
                 detail.BonusAmount,
@@ -180,7 +180,7 @@ public class BonusValidationService
             }
         }
 
-        // 6. Total de la liquidaciÛn.
+        // 6. Total de la liquidaci√≥n.
         decimal savedTotal = settlement.Details
             .Sum(d => d.BonusAmount);
 
@@ -216,7 +216,7 @@ public class BonusValidationService
         {
             result.Errors.Add(
                 $"Existen {pending.Count} novedades " +
-                "pendientes de aprobaciÛn o con " +
+                "pendientes de aprobaci√≥n o con " +
                 "un estado no reconocido.");
         }
 
@@ -230,10 +230,10 @@ public class BonusValidationService
         {
             result.Errors.Add(
                 $"Existen {unclassified.Count} devengados " +
-                "sin clasificaciÛn salarial.");
+                "sin clasificaci√≥n salarial.");
         }
 
-        // Las informativas todavÌa requieren
+        // Las informativas todav√≠a requieren
         // tratamiento especializado.
 
         var laborIncidents =
@@ -249,8 +249,8 @@ public class BonusValidationService
         {
             result.Errors.Add(
                 $"Existen {laborIncidents.Count} novedades " +
-                "laborales que requieren revisiÛn. " +
-                "No se han descontado dÌas autom·ticamente."
+                "laborales que requieren revisi√≥n. " +
+                "No se han descontado d√≠as autom√°ticamente."
             );
         }
 
@@ -259,11 +259,11 @@ public class BonusValidationService
         {
             result.Errors.Add(
                 $"Existen {informative.Count} novedades " +
-                "informativas que requieren revisiÛn " +
+                "informativas que requieren revisi√≥n " +
                 "de ausencias, licencias o incapacidades.");
         }*/
 
-        // 8. Comparar con el c·lculo actual.
+        // 8. Comparar con el c√°lculo actual.
         // Solo si las validaciones previas permiten
         // ejecutar la vista previa de forma coherente.
         if (!result.Errors.Any())
@@ -279,7 +279,7 @@ public class BonusValidationService
                     settlement.Details.Count)
                 {
                     result.Errors.Add(
-                        "La cantidad de detalles cambiÛ. " +
+                        "La cantidad de detalles cambi√≥. " +
                         "Recalcula el borrador.");
                 }
 
@@ -294,7 +294,7 @@ public class BonusValidationService
                     {
                         result.Errors.Add(
                             $"El contrato {saved.ContractId} " +
-                            "ya no coincide con el c·lculo.");
+                            "ya no coincide con el c√°lculo.");
                         continue;
                     }
 
@@ -327,13 +327,13 @@ public class BonusValidationService
                     preview.TotalBonus))
                 {
                     result.Errors.Add(
-                        "El total de prima est· desactualizado.");
+                        "El total de prima est√° desactualizado.");
                 }
             }
             catch (InvalidOperationException ex)
             {
                 result.Errors.Add(
-                    "No fue posible validar el nuevo c·lculo: " +
+                    "No fue posible validar el nuevo c√°lculo: " +
                     ex.Message);
             }
         }
@@ -360,13 +360,13 @@ public class BonusValidationService
         }
 
         result.Warnings.Add(
-            "Los pagos histÛricos registrados deben " +
+            "Los pagos hist√≥ricos registrados deben " +
             "conciliarse con sus comprobantes originales " +
-            "antes de aprobar la liquidaciÛn.");
+            "antes de aprobar la liquidaci√≥n.");
 
-        // 9. Reglas que a˙n debemos implementar.
+        // 9. Reglas que a√∫n debemos implementar.
         result.Warnings.Add(
-            "Falta integrar el tratamiento especÌfico " +
+            "Falta integrar el tratamiento espec√≠fico " +
             "de suspensiones, licencias e incapacidades.");
 
         result.Warnings.Add(
@@ -374,10 +374,10 @@ public class BonusValidationService
             "pagadas previamente.");
 
         result.Warnings.Add(
-            "El c·lculo no constituye todavÌa " +
-            "una liquidaciÛn definitiva autorizada.");
+            "El c√°lculo no constituye todav√≠a " +
+            "una liquidaci√≥n definitiva autorizada.");
 
-        // La aprobaciÛn permanecer· bloqueada hasta
+        // La aprobaci√≥n permanecer√° bloqueada hasta
         // completar los controles legales pendientes.
         result.ReadyForApproval = false;
 

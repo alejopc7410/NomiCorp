@@ -1,4 +1,4 @@
-
+﻿
 import { useEffect, useState } from "react";
 import { payslipsApi } from "./services/payslips";
 import jsPDF from "jspdf";
@@ -411,8 +411,6 @@ function EmployeePayslips() {
                     <h4 className="mb-3">
                         Mis desprendibles
                     </h4>
-
-                    <p>Salario básico (30 días) - Provisión</p>
 
                     <p className="text-muted">
                         Consulta los comprobantes de pago

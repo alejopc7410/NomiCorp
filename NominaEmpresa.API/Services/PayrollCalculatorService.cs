@@ -1,4 +1,4 @@
-
+﻿
 using Microsoft.EntityFrameworkCore;
 using NominaEmpresa.API.Data;
 using NominaEmpresa.API.Models;
@@ -333,7 +333,7 @@ public class PayrollCalculationService
             detail.Concepts.Add(new PayrollConcept
             {
                 Code = "SAL001",
-                Description = $"Salario basico ({workedDays} días)",
+                Description = $"Salario básico ({workedDays} días)",
                 Category = "Devengado",
                 Quantity = workedDays,
                 UnitValue = Math.Round(

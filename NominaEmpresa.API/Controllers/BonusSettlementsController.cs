@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+ï»¿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NominaEmpresa.API.Authorization;
@@ -58,7 +58,7 @@ public class BonusSettlementsController : ControllerBase
         if (result == null)
             return NotFound(new
             {
-                message = "Liquidación no encontrada."
+                message = "LiquidaciÃ³n no encontrada."
             });
 
         return Ok(result);
@@ -143,7 +143,7 @@ public class BonusSettlementsController : ControllerBase
             return Conflict(new
             {
                 message = "No fue posible guardar la " +
-                          "liquidación. Verifica si ya " +
+                          "liquidaciÃ³n. Verifica si ya " +
                           "existe una para ese semestre."
             });
         }
@@ -160,7 +160,7 @@ public class BonusSettlementsController : ControllerBase
 
             return Ok(new
             {
-                message = "Liquidación recalculada correctamente.",
+                message = "LiquidaciÃ³n recalculada correctamente.",
                 settlement.Id,
                 settlement.Year,
                 settlement.Semester,
